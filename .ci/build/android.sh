@@ -98,6 +98,12 @@ if [ -n "${ANDROID_KEYSTORE_B64}" ]; then
 	echo "-- Keystore SHA1 is ${SHA1SUM}"
 fi
 
+# Clean up any leftover top-level build.gradle.kts that references libs or interferes with Gradle's :Eden project
+if [ -f "$ROOTDIR/build.gradle.kts" ] && grep -q "libs" "$ROOTDIR/build.gradle.kts" 2>/dev/null; then
+    echo "-- Removing incompatible top-level build.gradle.kts"
+    rm -f "$ROOTDIR/build.gradle.kts"
+fi
+
 cd src/android
 chmod +x ./gradlew
 
