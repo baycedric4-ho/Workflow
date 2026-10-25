@@ -109,9 +109,6 @@ chmod +x ./gradlew
 
 set -- "$@" -DUSE_CCACHE="${CCACHE}"
 [ "$DEVEL" != "true" ] && set -- "$@" -DENABLE_UPDATE_CHECKER=ON
-if [ "$FLAVOR_LOWER" = "chromeos" ] || [ "$FLAVOR_LOWER" = "x86_64" ]; then
-	set -- "$@" -DANDROID_ARM_NEON=OFF
-fi
 if [ "$BUILD_ID" = "nightly" ]; then
 	NIGHTLY=true
 else
@@ -136,23 +133,7 @@ fi
 mkdir -p "$ARTIFACTS_DIR"
 
 TARGET_TASK="copy${APK_FLAVOR}${TYPE}Outputs"
-
-# Dynamic detection if exact task name differs (e.g. ChromeOS vs Chromeos vs assemble)
-if [ "$FLAVOR_LOWER" = "chromeos" ] || [ "$FLAVOR_LOWER" = "x86_64" ]; then
-    TASKS_LIST=$(./gradlew tasks --all 2>/dev/null || true)
-    if ! echo "$TASKS_LIST" | grep -q "^$TARGET_TASK"; then
-        echo "-- Task $TARGET_TASK not directly listed, checking alternatives..."
-        if echo "$TASKS_LIST" | grep -q "copyChromeos${TYPE}Outputs"; then
-            TARGET_TASK="copyChromeos${TYPE}Outputs"
-        elif echo "$TASKS_LIST" | grep -q "copyChromeOS${TYPE}Outputs"; then
-            TARGET_TASK="copyChromeOS${TYPE}Outputs"
-        elif echo "$TASKS_LIST" | grep -q "assembleChromeos${TYPE}"; then
-            TARGET_TASK="assembleChromeos${TYPE}"
-        elif echo "$TASKS_LIST" | grep -q "assembleChromeOS${TYPE}"; then
-            TARGET_TASK="assembleChromeOS${TYPE}"
-        fi
-    fi
-fi
+FALLBACK_TASK="assemble${APK_FLAVOR}${TYPE}"
 
 echo "-- building with task: $TARGET_TASK"
 
@@ -167,7 +148,6 @@ BUILD_SUCCESS=0
 
 if [ "$BUILD_SUCCESS" -ne 0 ]; then
     echo "!! Task $TARGET_TASK failed with code $BUILD_SUCCESS."
-    FALLBACK_TASK="assemble${APK_FLAVOR}${TYPE}"
     echo "-- Attempting fallback build task: $FALLBACK_TASK"
     ./gradlew "$FALLBACK_TASK" \
         --stacktrace \
