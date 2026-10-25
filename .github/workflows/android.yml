@@ -70,12 +70,6 @@ jobs:
           key: ${{ runner.os }}-amd64-universal
           version: ${{ inputs.cpm-cache-version }}
 
-      - name: Install NDK r30
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r30
-          link-to-sdk: true
-
       - name: Install dependencies
         run: ./.ci/deps/android.sh
 
@@ -121,12 +115,6 @@ jobs:
         with:
           key: ${{ runner.os }}-amd64-universal
           version: ${{ inputs.cpm-cache-version }}
-
-      - name: Install NDK r30
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r30
-          link-to-sdk: true
 
       - name: Install dependencies
         run: ./.ci/deps/android.sh
