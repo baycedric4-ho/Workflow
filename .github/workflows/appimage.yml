@@ -41,6 +41,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Make CI scripts executable
+        run: chmod -R +x ./.ci
+
       - id: set
         run: ./.ci/matrix/appimage.sh
 

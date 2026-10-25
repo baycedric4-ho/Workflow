@@ -44,6 +44,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Make CI scripts executable
+        run: chmod -R +x ./.ci
+
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:

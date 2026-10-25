@@ -41,6 +41,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Make CI scripts executable
+        run: chmod -R +x ./.ci
+
       - id: set
         run: echo "matrix=$(./.ci/matrix/android.sh)" >> "$GITHUB_OUTPUT"
 
@@ -86,6 +89,18 @@ jobs:
           archive: false
           path: artifacts/*.apk
 
+      - name: Capture & Display logs on failure
+        if: failure()
+        run: ./.ci/debug/dump-logs.sh artifacts/build-logs-${{ matrix.flavor }}
+
+      - name: Upload error logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: error-logs-android-${{ matrix.flavor }}-${{ matrix.target }}
+          path: artifacts/build-logs-${{ matrix.flavor }}
+          archive: true
+
   android-x86_64:
     name: "Android x86_64 (Chromebook)"
     runs-on: ubuntu-latest
@@ -121,4 +136,16 @@ jobs:
           name: android-x86_64-chromeos
           archive: false
           path: artifacts/*.apk
+
+      - name: Capture & Display logs on failure
+        if: failure()
+        run: ./.ci/debug/dump-logs.sh artifacts/build-logs-x86_64
+
+      - name: Upload error logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: error-logs-android-x86_64
+          path: artifacts/build-logs-x86_64
+          archive: true
 

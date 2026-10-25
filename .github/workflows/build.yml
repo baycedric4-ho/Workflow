@@ -37,6 +37,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Make CI scripts executable
+        run: chmod -R +x ./.ci
+
       - name: Parse Forgejo payload
         run: |
           echo '${{ toJSON(github.event.client_payload) }}' > ./payload.json
@@ -110,6 +113,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Make CI scripts executable
+        run: chmod -R +x ./.ci
 
       - name: Download Forgejo environment
         uses: actions/download-artifact@v8

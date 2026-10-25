@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Workflow</string>
+    <string name="dashboard_title">Workflow Manager</string>
+    <string name="chromebook_target_title">Chromebook x86_64 Support</string>
+    <string name="flavor_label">Flavor</string>
+    <string name="status_configured">Configured &amp; Active</string>
+</resources>

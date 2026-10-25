@@ -17,6 +17,10 @@ runs:
       with:
         disable_annotations: true
 
+    - name: Make CI scripts executable
+      shell: bash
+      run: chmod -R +x ./.ci 2>/dev/null || true
+
     - name: Download Forgejo environment
       uses: actions/download-artifact@v8
       with:

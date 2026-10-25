@@ -126,6 +126,7 @@ fi
 echo "-- building..."
 
 ./gradlew "copy${APK_FLAVOR}${TYPE}Outputs" \
+    --stacktrace \
     -Dorg.gradle.caching="${CCACHE}" \
     -Dorg.gradle.parallel="${CCACHE}" \
     -Dorg.gradle.workers.max="${NUM_JOBS}" \
