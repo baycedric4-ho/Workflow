@@ -152,7 +152,15 @@ echo "-- building with task: $TARGET_TASK"
     -Dorg.gradle.parallel="${CCACHE}" \
     -Dorg.gradle.workers.max="${NUM_JOBS}" \
     -PYUZU_ANDROID_ARGS="$*" \
-	-Pnightly=$NIGHTLY
+    -Pnightly=$NIGHTLY > "$ROOTDIR/gradle-build.log" 2>&1
+GRADLE_EXIT=$?
+
+cat "$ROOTDIR/gradle-build.log"
+
+if [ "$GRADLE_EXIT" -ne 0 ]; then
+    echo "!! Gradle build failed with exit code $GRADLE_EXIT !!"
+    exit "$GRADLE_EXIT"
+fi
 
 if [ -n "${ANDROID_KEYSTORE_B64}" ]; then
     rm "${ANDROID_KEYSTORE_FILE}"
