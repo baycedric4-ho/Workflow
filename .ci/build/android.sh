@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/bin/bash -e
+set -o pipefail
 
 # SPDX-FileCopyrightText: Copyright 2025 Eden Emulator Project
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -102,6 +103,9 @@ chmod +x ./gradlew
 
 set -- "$@" -DUSE_CCACHE="${CCACHE}"
 [ "$DEVEL" != "true" ] && set -- "$@" -DENABLE_UPDATE_CHECKER=ON
+if [ "$FLAVOR_LOWER" = "chromeos" ] || [ "$FLAVOR_LOWER" = "x86_64" ]; then
+	set -- "$@" -DANDROID_ARM_NEON=OFF
+fi
 if [ "$BUILD_ID" = "nightly" ]; then
 	NIGHTLY=true
 else
@@ -146,20 +150,26 @@ fi
 
 echo "-- building with task: $TARGET_TASK"
 
+BUILD_SUCCESS=0
 ./gradlew "$TARGET_TASK" \
     --stacktrace \
     -Dorg.gradle.caching="${CCACHE}" \
     -Dorg.gradle.parallel="${CCACHE}" \
     -Dorg.gradle.workers.max="${NUM_JOBS}" \
     -PYUZU_ANDROID_ARGS="$*" \
-    -Pnightly=$NIGHTLY > "$ROOTDIR/gradle-build.log" 2>&1
-GRADLE_EXIT=$?
+    -Pnightly=$NIGHTLY 2>&1 | tee "$ROOTDIR/gradle-build.log" || BUILD_SUCCESS=$?
 
-cat "$ROOTDIR/gradle-build.log"
-
-if [ "$GRADLE_EXIT" -ne 0 ]; then
-    echo "!! Gradle build failed with exit code $GRADLE_EXIT !!"
-    exit "$GRADLE_EXIT"
+if [ "$BUILD_SUCCESS" -ne 0 ]; then
+    echo "!! Task $TARGET_TASK failed with code $BUILD_SUCCESS."
+    FALLBACK_TASK="assemble${APK_FLAVOR}${TYPE}"
+    echo "-- Attempting fallback build task: $FALLBACK_TASK"
+    ./gradlew "$FALLBACK_TASK" \
+        --stacktrace \
+        -Dorg.gradle.caching="${CCACHE}" \
+        -Dorg.gradle.parallel="${CCACHE}" \
+        -Dorg.gradle.workers.max="${NUM_JOBS}" \
+        -PYUZU_ANDROID_ARGS="$*" \
+        -Pnightly=$NIGHTLY 2>&1 | tee -a "$ROOTDIR/gradle-build.log"
 fi
 
 if [ -n "${ANDROID_KEYSTORE_B64}" ]; then
