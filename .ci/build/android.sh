@@ -123,9 +123,30 @@ if [ "$PGO_TARGET" = "pgo" ]; then
 	set -- "$@" -DCMAKE_C_FLAGS="$PGO_FLAGS" -DCMAKE_CXX_FLAGS="$PGO_FLAGS"
 fi
 
-echo "-- building..."
+mkdir -p "$ARTIFACTS_DIR"
 
-./gradlew "copy${APK_FLAVOR}${TYPE}Outputs" \
+TARGET_TASK="copy${APK_FLAVOR}${TYPE}Outputs"
+
+# Dynamic detection if exact task name differs (e.g. ChromeOS vs Chromeos vs assemble)
+if [ "$FLAVOR_LOWER" = "chromeos" ] || [ "$FLAVOR_LOWER" = "x86_64" ]; then
+    TASKS_LIST=$(./gradlew tasks --all 2>/dev/null || true)
+    if ! echo "$TASKS_LIST" | grep -q "^$TARGET_TASK"; then
+        echo "-- Task $TARGET_TASK not directly listed, checking alternatives..."
+        if echo "$TASKS_LIST" | grep -q "copyChromeos${TYPE}Outputs"; then
+            TARGET_TASK="copyChromeos${TYPE}Outputs"
+        elif echo "$TASKS_LIST" | grep -q "copyChromeOS${TYPE}Outputs"; then
+            TARGET_TASK="copyChromeOS${TYPE}Outputs"
+        elif echo "$TASKS_LIST" | grep -q "assembleChromeos${TYPE}"; then
+            TARGET_TASK="assembleChromeos${TYPE}"
+        elif echo "$TASKS_LIST" | grep -q "assembleChromeOS${TYPE}"; then
+            TARGET_TASK="assembleChromeOS${TYPE}"
+        fi
+    fi
+fi
+
+echo "-- building with task: $TARGET_TASK"
+
+./gradlew "$TARGET_TASK" \
     --stacktrace \
     -Dorg.gradle.caching="${CCACHE}" \
     -Dorg.gradle.parallel="${CCACHE}" \
@@ -137,6 +158,12 @@ if [ -n "${ANDROID_KEYSTORE_B64}" ]; then
     rm "${ANDROID_KEYSTORE_FILE}"
 fi
 
+# Search and copy APKs from build outputs if not already in ARTIFACTS_DIR
+if ! ls "$ARTIFACTS_DIR"/*.apk >/dev/null 2>&1; then
+    echo "-- Copying generated APK from build outputs..."
+    find "$ROOTDIR/src/android" -name "*.apk" -exec cp -v {} "$ARTIFACTS_DIR/" \; 2>/dev/null || true
+fi
+
 cd "$ARTIFACTS_DIR"
 
 name="${PROJECT_PRETTYNAME}-Android-${ARTIFACT_REF}-${FLAVOR_LOWER}"
@@ -145,7 +172,12 @@ if [ "$PGO_TARGET" = "pgo" ]; then
 	name="$name-pgo"
 fi
 
-mv ./*.apk "$name.apk"
+for apk in *.apk; do
+    if [ -f "$apk" ] && [ "$apk" != "$name.apk" ]; then
+        mv "$apk" "$name.apk"
+        break
+    fi
+done
 
 cd "$ROOTDIR"
 
