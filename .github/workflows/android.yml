@@ -85,3 +85,40 @@ jobs:
           name: android-${{ matrix.flavor }}-${{ matrix.target }}
           archive: false
           path: artifacts/*.apk
+
+  android-x86_64:
+    name: "Android x86_64 (Chromebook)"
+    runs-on: ubuntu-latest
+    env:
+      FLAVOR: "chromeos"
+      PGO_TARGET: "standard"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup
+        uses: ./.github/workflows/setup
+        with:
+          key: ${{ runner.os }}-amd64-universal
+          version: ${{ inputs.cpm-cache-version }}
+
+      - name: Install NDK r30
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r30
+          link-to-sdk: true
+
+      - name: Install dependencies
+        run: ./.ci/deps/android.sh
+
+      - name: Build
+        run: JAVA_HOME=$JAVA_HOME_17_X64 ./.ci/build/android.sh -DCCACHE_PATH=${SCCACHE_PATH}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-x86_64-chromeos
+          archive: false
+          path: artifacts/*.apk
+

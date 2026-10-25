@@ -25,7 +25,7 @@ Options:
     -r, --release        	Enable update checker. If set, sets the DEVEL bool variable to false.
                          	By default, DEVEL is true.
     -t, --target <FLAVOR> 	Build flavor (variable: FLAVOR)
-                          	Valid values are: legacy, optimized, standard, chromeos
+                          	Valid values are: legacy, optimized, standard, chromeos, x86_64
                           	Default: standard
     -b, --build-type <TYPE>	Build type (variable: TYPE)
                           	Valid values are: Release, RelWithDebInfo, Debug
@@ -81,7 +81,7 @@ case "$FLAVOR_LOWER" in
 	legacy) APK_FLAVOR=Legacy ;;
 	optimized) APK_FLAVOR=GenshinSpoof ;;
 	standard) APK_FLAVOR=Mainline ;;
-    chromeos) APK_FLAVOR=ChromeOS ;;
+	chromeos|x86_64) APK_FLAVOR=ChromeOS ;;
 	*) die "Invalid build flavor $FLAVOR."
 esac
 

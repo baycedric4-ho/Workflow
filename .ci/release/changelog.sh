@@ -95,6 +95,7 @@ android() {
 
 android_matrix() {
 	android "Standard" "standard" "The standard build. Most users should use this."
+	android "Chromebook (x86_64)" "chromeos" "For x86_64 Chromebooks and Atom devices."
 
 	if pgo; then
 		android "Genshin Spoof" "optimized" "Spoofs Eden as Genshin Impact, which may enable optimizations/frame generation on some flagship devices."
